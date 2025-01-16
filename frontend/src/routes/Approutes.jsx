@@ -4,6 +4,7 @@ import Login from "../screens/Login"
 import Register from "../screens/Register"
 import Home from "../screens/Home"
 import UserAuth from '../auth/UserAuth'
+import EditorPage from "../screens/EditorPage"
 
 function AppRoutes() {
 
@@ -13,7 +14,7 @@ function AppRoutes() {
                 <Route path="/" element={<UserAuth><Home/></UserAuth>}/>
                 <Route path="/login" element={<Login/>}/>
                 <Route path="/register" element={<Register/>}/>
-                {/* <Route path="/project" element={<UserAuth><Project/></UserAuth>}/> */}
+                <Route path="/editor/:roomId" element={<EditorPage/>}/>
             </Routes>
         </BrowserRouter>
     )
