@@ -1,18 +1,22 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import toast from 'react-hot-toast';
 import 'remixicon/fonts/remixicon.css';
-import { UserContext } from '../context/user.context';  
+import { UserContext } from '../context/user.context';
 import Editor from '../components/Editor';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import Sidebar from '../components/Sidebar';
 
 const EditorPage = () => {
     const { allFiles, setAllFiles, fileContents, setFileContents } = useContext(UserContext);
-
+    const params = useParams();
+    const navigate = useNavigate();
+    const location = useLocation();
     const handleCreateFile = () => {
         let fileName = prompt("Enter File Name: ");
         const extension = fileName.split('.');
 
         if (extension.length === 1) {
-            fileName += '.txt'; 
+            fileName += '.txt';
         }
 
         if (allFiles.has(fileName)) {
@@ -20,28 +24,18 @@ const EditorPage = () => {
             return;
         }
 
-        setAllFiles(new Set(allFiles.add(fileName)));  
+        setAllFiles(new Set(allFiles.add(fileName)));
 
         setFileContents({
             ...fileContents,
-            [fileName]: ""  
+            [fileName]: ""
         });
     };
 
     return (
         <div className='h-screen flex text-white'>
             {/* Sidebar */}
-            <div className='side-bar h-full flex flex-col w-14 bg-black'>
-                <div className="h-10 w-10 flex items-center justify-center bg-slate-900 rounded-md mt-5 ml-1">
-                    <i className="ri-keyboard-line text-2xl"></i>
-                </div>
-                <div className="h-10 w-10 flex items-center justify-center bg-slate-900 rounded-md mt-5 ml-1">
-                    <i className="ri-chat-1-line text-2xl"></i>
-                </div>
-                <div className="h-10 w-10 flex items-center justify-center bg-slate-900 rounded-md mt-6 ml-1">
-                    <i className="ri-artboard-line text-2xl"></i>
-                </div>
-            </div>
+            <Sidebar/>
 
             {/* File Sidebar */}
             <div className="file-and-chat h-full flex flex-col w-1/4 bg-slate-700">

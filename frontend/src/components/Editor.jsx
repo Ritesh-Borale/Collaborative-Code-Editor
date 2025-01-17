@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import MonacoEditor from '@monaco-editor/react';
 import { useUserContext } from '../context/user.context';
 import axiosInstance from '../config/axios';  // Import axios
+import { useParams } from 'react-router-dom';
 
 const Editor = () => {
     const { allFiles, setAllFiles, fileContents, setFileContents } = useUserContext();
@@ -9,6 +10,7 @@ const Editor = () => {
     const [content, setContent] = useState(fileContents[currentFile] || "");
     const [output, setOutput] = useState("");
     const [input, setInput] = useState("");
+    
 
     useEffect(() => {
         const storedFiles = JSON.parse(localStorage.getItem('allFiles'));
@@ -92,7 +94,6 @@ const Editor = () => {
         }
     };
 
-    // Function to handle running the code
     const handleRunCode = async () => {
         axiosInstance.post('/runcode/execute', {
             code: content,
@@ -127,7 +128,7 @@ const Editor = () => {
                 </select>
                 <button
                     className="Run-Code ml-auto mr-5 h-10 w-28 bg-green-500 rounded-md"
-                    onClick={handleRunCode}  // Run code when clicked
+                    onClick={handleRunCode} 
                 >
                     Run Code
                 </button>
@@ -154,19 +155,19 @@ const Editor = () => {
                     />
                 </div>
 
-                <div className="flex-grow-[4] p-2 bg-slate-800 rounded-md">
+                <div className="flex-grow-[4] p-2 bg-slate-800 rounded-md h-full">
                     <p className="text-2xl font-bold mb-5 text-white">Input:</p>
                     <textarea
-                        className="p-2 h-full w-full bg-slate-700 h-5/6 rounded-lg text-white"
+                        className="p-2 h-full w-full bg-slate-700 h-4/5 rounded-lg text-white"
                         value={input}
-                        onChange={(e) => setInput(e.target.value)}  // Update input
+                        onChange={(e) => setInput(e.target.value)} 
                     />
                 </div>
             </div>
 
             <div className="terminal flex-grow-[5] bg-black p-4">
                 <p className="text-white text-xl">Terminal Output:</p>
-                <pre className="text-white">{output}</pre>  {/* Display terminal output */}
+                <pre className="text-white">{output}</pre>
             </div>
         </div>
     );
