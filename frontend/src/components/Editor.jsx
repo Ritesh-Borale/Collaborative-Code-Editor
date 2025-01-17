@@ -24,7 +24,7 @@ const Editor = () => {
         if (allFiles.size === 0) {
             const defaultFileName = 'Hello.txt';
             const defaultContent = 'Hello user, how are you?';
-    
+
             setAllFiles(new Set([defaultFileName]));
             setFileContents({ [defaultFileName]: defaultContent });
         }
@@ -89,8 +89,8 @@ const Editor = () => {
     };
 
     return (
-        <div className="h-full w-full">
-            <div className="flex items-center justify-between p-2 bg-slate-800">
+        <div className="h-full w-full flex flex-col">
+            <div className="files flex items-center justify-between p-2 bg-slate-800">
                 <select
                     className="bg-slate-700 text-white p-2 rounded-md"
                     value={currentFile}
@@ -98,7 +98,7 @@ const Editor = () => {
                         const selectedFile = e.target.value;
                         setCurrentFile(selectedFile);
                         setContent(fileContents[selectedFile]);
-                    }} 
+                    }}
                 >
                     {Array.from(allFiles).map((fileName) => (
                         <option key={fileName} value={fileName}>
@@ -106,23 +106,43 @@ const Editor = () => {
                         </option>
                     ))}
                 </select>
-                <button 
-                    className='delete-file h-10 w-28 bg-red-500 rounded-md'
-                    onClick={deleteFile}    
+                <button
+                    className="delete-file h-10 w-28 bg-red-500 rounded-md"
+                    onClick={deleteFile}
                 >
                     Delete File
                 </button>
             </div>
 
-            {/* Monaco Editor */}
-            <MonacoEditor
-                height="100%" 
-                language={getLanguage(currentFile)} 
-                value={content} 
-                onChange={handleEditorChange} 
-                theme="vs-dark" 
-            />
+            <div className="editor-terminal flex" style={{ flexBasis: "60%", minHeight: "70%"}}>
+                <div className="flex-grow-[5]">
+                    <MonacoEditor
+                        height="100%"
+                        width="100%"
+                        language={getLanguage(currentFile)}
+                        value={content}
+                        onChange={handleEditorChange}
+                        theme="vs-dark"
+                        options={{
+                            fontSize: 15,
+                        }}
+                    />
+                </div>
+
+                <div className="flex-grow-[4] p-2 bg-slate-800 rounded-md ">
+                    <p className="text-2xl font-bold mb-5 text-white">Input:</p>
+                    <textarea className="p-2 h-full w-full bg-slate-700 h-5/6 rounded-lg text-white"></textarea>
+                </div>
+            </div>
+
+
+            <div className="terminal flex-grow-[5] bg-black p-4">
+                <p className="text-white text-xl">Terminal Output:</p>
+                {/* Add terminal content here */}
+            </div>
         </div>
+
+
     );
 };
 
