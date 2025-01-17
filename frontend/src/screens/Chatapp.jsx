@@ -1,11 +1,61 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Sidebar from "../components/Sidebar";
-import { useLocation } from "react-router-dom";
+import toast from 'react-hot-toast';
+import { useLocation, useParams } from "react-router-dom";
+import { initializeSocket, receiveMessage, sendMessage } from "../config/socket";
 
 const Chatapp = () => {
 
     const messageBox = React.createRef();
     const location = useLocation();
+    const params = useParams();
+    const [message, setMessage] = useState('');
+    const [messages, setMessages] = useState([])
+
+    useEffect(() => {
+        const socket = initializeSocket(params.roomId);
+
+        return () => {
+            if (socket) {
+                socket.disconnect();
+            }
+        };
+    }, [params.roomId]);
+
+    useEffect(() => {
+
+        const data = {
+            roomId: params.roomId,
+            username: location.state?.username,
+        };
+
+        sendMessage('join', data);
+
+    }, [])
+
+    useEffect(() => {
+        receiveMessage('chat-message', (data) => {
+            setMessages((prev) => [...prev, data]);
+        });
+    }, []);
+
+    useEffect(() => {
+        messageBox.current?.scrollTo(0, messageBox.current.scrollHeight);
+    }, [messages]);
+
+    const send = () => {
+        if (message.trim()) {
+            sendMessage('chat-message', {
+                roomId: params.roomId,
+                username: location.state?.username,
+                message,
+            });
+            setMessages((prev) => [...prev, { username: location.state?.username, message }]);
+            setMessage('');
+        }
+    };
+
+
 
     return (
         <div className="h-screen flex text-white">
@@ -18,29 +68,34 @@ const Chatapp = () => {
                     <div
                         ref={messageBox}
                         className="message-box p-1 flex-grow flex flex-col overflow-auto max-h-full scrollbar-hide">
-                        <div className="max-w-52 ml-auto message flex flex-col p-2 mb-2 bg-green-600 w-fit rounded-md border-2 border-green-500">
-                            <small className="opacity-65 text-xs">
-                                {location.state.username}
-                            </small>
-                            <div className="text-sm">
-                                <p>Hello How are you My name is Ritesh</p>
+                        {messages.map((msg, index) => (
+                            <div
+                                key={index}
+                                className={`max-w-52 message flex flex-col p-2 mb-2 ${msg.username === location.state.username ? 'bg-green-600 ml-auto' : 'bg-black'} w-fit rounded-md border-2 ${msg.username === location.state.username ? 'border-green-500' : 'border-white'}`}>
+                                <small className="opacity-65 text-xs">
+                                    {msg.username}
+                                </small>
+                                <div className="text-sm">
+                                    <p>{msg.message}</p>
+                                </div>
                             </div>
-                        </div>
-                        <div className="max-w-52 message flex flex-col p-2 bg-black w-fit rounded-md border-2 border-white">
-                            <small className="opacity-65 text-xs">
-                                {location.state.username}
-                            </small>
-                            <div className="text-sm">
-                                <p>hey whats up I am good</p>
-                            </div>
-                        </div>
+                        ))}
                     </div>
+
                 </div>
                 <div className="inputField w-1/4 flex absolute bottom-0 bg">
                     <input
-                        className='p-2 px-4 border-none outline-none flex-grow bg-black' type="text" placeholder='Enter message' />
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        className='p-2 px-4 border-none outline-none flex-grow bg-black'
+                        type="text"
+                        placeholder='Enter message'
+                    />
+
                     <button
-                        className='px-5 bg-slate-950 text-white'><i className="ri-send-plane-fill"></i></button>
+                        onClick={send}
+                        className='px-5 bg-slate-950 text-white'><i className="ri-send-plane-fill"></i>
+                    </button>
                 </div>
             </div>
         </div>
