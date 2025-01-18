@@ -4,6 +4,7 @@ import app from './app.js';
 import { Server } from 'socket.io'
 import jwt from 'jsonwebtoken'
 import mongoose from 'mongoose';
+import { generateResult } from './services/ai.service.js';
 
 
 const server = http.createServer(app);
@@ -48,13 +49,31 @@ io.on('connection', socket => {
     });
 
 
-    socket.on('chat-message', ({ roomId, username, message }) => {
+    socket.on('chat-message',async ({ roomId, username, message }) => {
         if (!roomId || !username || !message) {
             console.error('Invalid message data');
             return;
         }
+        
         const msgData = { username, message };
+        const aiIsPresentInMessage = message.includes('@ai');
+
         socket.to(roomId).emit('chat-message', msgData);
+
+        if(aiIsPresentInMessage){
+            const prompt = message.replace('@ai','');
+            const result = await generateResult(prompt);
+
+            io.to(roomId).emit('chat-message',{
+                username:'ai',
+                message:result,
+                by : username
+            })
+
+            return ;
+
+        }
+
         console.log(`Message from ${username} in room ${roomId}: ${message}`);
     });
 

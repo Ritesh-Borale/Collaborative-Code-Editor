@@ -10,7 +10,7 @@ const Editor = () => {
     const [content, setContent] = useState(fileContents[currentFile] || "");
     const [output, setOutput] = useState("");
     const [input, setInput] = useState("");
-    
+
 
     useEffect(() => {
         const storedFiles = JSON.parse(localStorage.getItem('allFiles'));
@@ -108,6 +108,10 @@ const Editor = () => {
         });
     };
 
+    const clearTerminal = () =>{
+        setOutput("");
+    }
+
     return (
         <div className="h-full w-full flex flex-col">
             <div className="files flex items-center justify-between p-2 bg-slate-800">
@@ -128,7 +132,7 @@ const Editor = () => {
                 </select>
                 <button
                     className="Run-Code ml-auto mr-5 h-10 w-28 bg-green-500 rounded-md"
-                    onClick={handleRunCode} 
+                    onClick={handleRunCode}
                 >
                     Run Code
                 </button>
@@ -143,7 +147,7 @@ const Editor = () => {
             <div className="editor-terminal flex" style={{ flexBasis: "60%", minHeight: "70%" }}>
                 <div className="flex-grow-[5]">
                     <MonacoEditor
-                        height="100%"
+                        height="90%"
                         width="100%"
                         language={getLanguage(currentFile)}
                         value={content}
@@ -160,14 +164,22 @@ const Editor = () => {
                     <textarea
                         className="p-2 h-full w-full bg-slate-700 h-4/5 rounded-lg text-white"
                         value={input}
-                        onChange={(e) => setInput(e.target.value)} 
+                        onChange={(e) => setInput(e.target.value)}
                     />
                 </div>
             </div>
 
-            <div className="terminal flex-grow-[5] bg-black p-4">
-                <p className="text-white text-xl">Terminal Output:</p>
-                <pre className="text-white">{output}</pre>
+            <div
+                className="terminal absolute bottom-0 bg-black p-4 "
+                style={{ height: '30%', maxHeight: '400px',width:'71%' }}
+            >
+                <div className="flex justify-between items-center">
+                    <p className="text-white text-xl">Terminal Output:</p>
+                    <button 
+                    onClick={clearTerminal}
+                    className="bg-yellow-500 px-2 text-black rounded-md">Clear terminal</button>
+                </div>
+                <pre className="text-white overflow-auto">{output}</pre>
             </div>
         </div>
     );

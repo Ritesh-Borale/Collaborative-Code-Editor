@@ -31,12 +31,7 @@ const Chatapp = () => {
 
     const [openFiles, setOpenFiles] = useState([]);
     const [fileTree, setFileTree] = useState({
-        "main.cpp": {
-            content: "#include<iostream>"
-        },
-        "sum.java": {
-            content: "System.out.print()"
-        }
+
     });
 
     useEffect(() => {
@@ -62,9 +57,31 @@ const Chatapp = () => {
 
     useEffect(() => {
         receiveMessage('chat-message', (data) => {
+            if (data.username === 'ai') {
+                const message = JSON.parse(data.message);
+                const reqSender = data.by; 
+                console.log(data);
+
+                if (message.fileTree) {
+                    setFileTree((prevTree) => {
+                        const updatedTree = { ...prevTree };
+
+                        Object.keys(message.fileTree).forEach((fileName) => {
+                            updatedTree[fileName] = {
+                                ...message.fileTree[fileName],
+                                reqSender,
+                            };
+                        });
+
+                        return updatedTree;
+                    });
+                }
+            }
+
             setMessages((prev) => [...prev, data]);
         });
     }, []);
+
 
     useEffect(() => {
         messageBox.current?.scrollTo(0, messageBox.current.scrollHeight);
@@ -121,7 +138,10 @@ const Chatapp = () => {
                                     {msg.username}
                                 </small>
                                 <div className="text-sm">
-                                    <p>{msg.message}</p>
+                                    {
+                                        msg.username === 'ai' ? WriteAiMessage(msg.message) : <p>{msg.message}</p>
+                                    }
+
                                 </div>
                             </div>
                         ))}
@@ -156,6 +176,10 @@ const Chatapp = () => {
                                     className="tree-element cursor-pointer p-2 flex item-center gap-2 bg-slate-500 w-full"
                                 >
                                     <p className="font-semibold text-lg">{file}</p>
+                                    
+                                    {fileTree[file]?.reqSender && (
+                                        <p className="text-sm opacity-50 mt-1">{`By: ${fileTree[file].reqSender}`}</p>
+                                    )}
                                 </button>
                             ))
 
@@ -197,9 +221,9 @@ const Chatapp = () => {
                                                     const ft = {
                                                         ...fileTree,
                                                         [currentFile]: {
-                                                            
+
                                                             content: updatedContent
-                                                            
+
                                                         }
                                                     };
                                                 }}

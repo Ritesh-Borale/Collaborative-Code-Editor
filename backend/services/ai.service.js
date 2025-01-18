@@ -51,6 +51,10 @@ const model = genAI.getGenerativeModel({
 
 
         </example>
+
+        IMPORTANT : Do not let the following error occur while sending the data in json format
+                    Uncaught (in promise) SyntaxError: Unexpected non-whitespace character after JSON at position 1110 (line 1 column 1111)
+                    at JSON.parse (<anonymous>)
     `
 });
 
