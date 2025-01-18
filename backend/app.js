@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import userRouter from './routes/user.route.js';
 import runcodeRouter from './routes/runcode.route.js'
 import connectDB from './db/db.js';
+import aiRouter from './routes/ai.route.js'
 connectDB();
 
 const app = express();
@@ -25,5 +26,7 @@ app.get('/', (req, res) => {
 app.use('/runcode', runcodeRouter);
 
 app.use('/users', userRouter);
+
+app.use('/ai',aiRouter)
 
 export default app;

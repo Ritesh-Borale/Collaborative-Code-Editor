@@ -3,6 +3,22 @@ import Sidebar from "../components/Sidebar";
 import toast from 'react-hot-toast';
 import { useLocation, useParams } from "react-router-dom";
 import { initializeSocket, receiveMessage, sendMessage } from "../config/socket";
+import "highlight.js/styles/nord.css";
+import Markdown from 'markdown-to-jsx'
+import hljs from 'highlight.js';
+
+function SyntaxHighlightedCode(props) {
+    const ref = useRef(null);
+
+    useEffect(() => {
+        if (ref.current && props.className?.includes('lang-')) {
+            hljs.highlightElement(ref.current);
+            ref.current.removeAttribute('data-highlighted');
+        }
+    }, [props.className, props.children]);
+
+    return <code {...props} ref={ref} />;
+}
 
 const Chatapp = () => {
 
@@ -10,7 +26,18 @@ const Chatapp = () => {
     const location = useLocation();
     const params = useParams();
     const [message, setMessage] = useState('');
-    const [messages, setMessages] = useState([])
+    const [messages, setMessages] = useState([]);
+    const [currentFile, setCurrentFile] = useState(null);
+
+    const [openFiles, setOpenFiles] = useState([]);
+    const [fileTree, setFileTree] = useState({
+        "main.cpp": {
+            content: "#include<iostream>"
+        },
+        "sum.java": {
+            content: "System.out.print()"
+        }
+    });
 
     useEffect(() => {
         const socket = initializeSocket(params.roomId);
@@ -55,6 +82,24 @@ const Chatapp = () => {
         }
     };
 
+    function WriteAiMessage(message) {
+
+        const messageObject = JSON.parse(message)
+        return (
+            <div
+                className='overflow-auto bg-slate-950 text-white rounded-sm p-2'
+            >
+                <Markdown
+                    children={messageObject.text}
+                    options={{
+                        overrides: {
+                            code: SyntaxHighlightedCode,
+                        },
+                    }}
+                />
+            </div>)
+    }
+
 
 
     return (
@@ -97,6 +142,84 @@ const Chatapp = () => {
                         className='px-5 bg-slate-950 text-white'><i className="ri-send-plane-fill"></i>
                     </button>
                 </div>
+            </div>
+            <div className="right bg-slate-850 flex flex-grow h-full">
+                <div className="explorer h-full max-w-64 min-w-52 bg-slate-600">
+                    <div className="file-tree w-full">
+                        {
+                            Object.keys(fileTree).map((file, index) => (
+                                <button
+                                    onClick={() => {
+                                        setCurrentFile(file)
+                                        setOpenFiles([...new Set([...openFiles, file])])
+                                    }}
+                                    className="tree-element cursor-pointer p-2 flex item-center gap-2 bg-slate-500 w-full"
+                                >
+                                    <p className="font-semibold text-lg">{file}</p>
+                                </button>
+                            ))
+
+                        }
+                    </div>
+                </div>
+                {currentFile &&
+                    <div className="code-editor flex flex-col flex-col h-full w-full">
+                        <div className="top flex ">
+
+                            <div className="files flex">
+                                {
+                                    openFiles.map((file, index) => (
+                                        <button
+                                            key={index}
+                                            onClick={() => setCurrentFile(file)}
+                                            className={`open-file cursor-pointer p-2 px-4 flex items-center w-fit gap-2 bg-slate-300 ${currentFile === file ? 'bg-slate-400' : ''}`}
+                                        >
+                                            <p className="font-semibold text-lg">{file}</p>
+                                        </button>
+
+                                    ))
+                                }
+                            </div>
+
+                        </div>
+                        <div className="bottom flex flex-grow max-w-full shrink overflow-auto">
+                            {
+                                fileTree[currentFile] && (
+                                    <div className="code-editor-area h-full overflow-auto flex-grow bg-slate-50">
+                                        <pre
+                                            className="hljs h-full">
+                                            <code
+                                                className="hljs h-full outline-none"
+                                                contentEditable
+                                                suppressContentEditableWarning
+                                                onBlur={(e) => {
+                                                    const updatedContent = e.target.innerText;
+                                                    const ft = {
+                                                        ...fileTree,
+                                                        [currentFile]: {
+                                                            
+                                                            content: updatedContent
+                                                            
+                                                        }
+                                                    };
+                                                }}
+                                                dangerouslySetInnerHTML={{
+                                                    __html: hljs.highlight('javascript', fileTree[currentFile].content).value
+                                                }}
+                                                style={{
+                                                    whiteSpace: 'pre-wrap',
+                                                    paddingBottom: '25rem',
+                                                    counterSet: 'line-numbering',
+                                                }}
+                                            />
+                                        </pre>
+                                    </div>
+                                )
+                            }
+
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     )
