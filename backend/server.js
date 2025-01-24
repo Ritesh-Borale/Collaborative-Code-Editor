@@ -49,6 +49,14 @@ io.on('connection', socket => {
     });
 
 
+    socket.on('code-change',({roomId,value,currentFile,allFiles})=>{
+        socket.in(roomId).emit('code-change',{value,currentFile,allFiles});
+    })
+
+    socket.on('sync-code',({value,currentFile,allFiles})=>{
+        io.to(roomId).emit('code-change',{value,currentFile,allFiles})
+    })
+
     socket.on('chat-message',async ({ roomId, username, message }) => {
         if (!roomId || !username || !message) {
             console.error('Invalid message data');

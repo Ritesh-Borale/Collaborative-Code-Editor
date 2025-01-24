@@ -5,12 +5,40 @@ import { UserContext } from '../context/user.context';
 import Editor from '../components/Editor';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import { initializeSocket, receiveMessage, sendMessage } from '../config/socket';
 
 const EditorPage = () => {
+    const socketRef = useRef(null);
+    const codeRef = useRef(null);
     const { allFiles, setAllFiles, fileContents, setFileContents } = useContext(UserContext);
     const params = useParams();
     const navigate = useNavigate();
     const location = useLocation();
+
+    useEffect(() => {
+        socketRef.current = initializeSocket(params.roomId);
+        console.log(params.roomId)
+        console.log(location.state?.username)
+        
+        const data = {
+            roomId: params.roomId,
+            username: location.state?.username,
+        };
+        
+        
+        sendMessage('join', data);
+        receiveMessage('joined',({roomId,username})=>{
+            
+            toast.success(`${username} joined the room.`);
+        })
+
+        return () => {
+            socketRef.current.disconnect();
+            socketRef.current.off('joined');
+            socketRef.current.off('user-disconnected');
+        };
+    }, [params.roomId,location.state?.username]);
+
     const handleCreateFile = () => {
         let fileName = prompt("Enter File Name: ");
         const extension = fileName.split('.');
@@ -61,10 +89,16 @@ const EditorPage = () => {
                 </div>
             </div>
 
-            {/* Editor Section */}
             <div className="editor-setup flex h-full bg-slate-700 flex-grow">
                 <div className='Editor h-full w-full'>
-                    <Editor />
+                    <Editor
+                    socketRef={socketRef}
+                    roomId={params.roomId}
+                    onCodeChange={(code)=>{
+                        codeRef.current=code;
+                    }}
+                    username={location.state?.username}
+                    />
                 </div>
             </div>
         </div>

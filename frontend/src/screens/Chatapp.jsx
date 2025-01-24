@@ -28,14 +28,21 @@ const Chatapp = () => {
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([]);
     const [currentFile, setCurrentFile] = useState(null);
-
     const [openFiles, setOpenFiles] = useState([]);
-    const [fileTree, setFileTree] = useState({
-
-    });
+    const [fileTree, setFileTree] = useState({});
 
     useEffect(() => {
         const socket = initializeSocket(params.roomId);
+
+        const data = {
+            roomId: params.roomId,
+            username: location.state?.username,
+        };
+
+        sendMessage('join', data);
+        receiveMessage('joined',({roomId,username})=>{
+            toast.success(`${username} joined the room.`);
+        })
 
         return () => {
             if (socket) {
@@ -44,16 +51,6 @@ const Chatapp = () => {
         };
     }, [params.roomId]);
 
-    useEffect(() => {
-
-        const data = {
-            roomId: params.roomId,
-            username: location.state?.username,
-        };
-
-        sendMessage('join', data);
-
-    }, [])
 
     useEffect(() => {
         receiveMessage('chat-message', (data) => {

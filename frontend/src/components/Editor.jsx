@@ -3,8 +3,10 @@ import MonacoEditor from '@monaco-editor/react';
 import { useUserContext } from '../context/user.context';
 import axiosInstance from '../config/axios';  // Import axios
 import { useParams } from 'react-router-dom';
+import { initializeSocket,sendMessage,receiveMessage } from '../config/socket';
 
-const Editor = () => {
+const Editor = ({socketRef, roomId, onCodeChange,username}) => {
+    
     const { allFiles, setAllFiles, fileContents, setFileContents } = useUserContext();
     const [currentFile, setCurrentFile] = useState(Array.from(allFiles)[0] || "");
     const [content, setContent] = useState(fileContents[currentFile] || "");
@@ -44,7 +46,56 @@ const Editor = () => {
             ...prevContents,
             [currentFile]: value
         }));
+        onCodeChange(value)
+        sendMessage('code-change', {
+            roomId,
+            value,
+            currentFile,
+            allFiles
+        });
+        
     };
+
+    useEffect(() => {
+        if (socketRef.current) {
+            receiveMessage('code-change', ({ value, currentFile, allFiles }) => {
+                if (currentFile) {
+                    setFileContents((prevContents) => {
+                        if (!prevContents[currentFile]) {
+                            localStorage.setItem(
+                                'allFiles',
+                                JSON.stringify([...new Set([...Object.keys(prevContents), currentFile])])
+                            );
+                            localStorage.setItem(
+                                'fileContents',
+                                JSON.stringify({
+                                    ...prevContents,
+                                    [currentFile]: value || '',
+                                })
+                            );
+    
+                            setAllFiles((prevFiles) => new Set([...prevFiles, currentFile]));
+                            return {
+                                ...prevContents,
+                                [currentFile]: value || '',
+                            };
+                        }
+    
+                        return {
+                            ...prevContents,
+                            [currentFile]: value,
+                        };
+                    });
+                }
+            });
+        }
+    
+        return () => {
+            socketRef.current.off('code-change');
+        };
+    }, [socketRef.current,fileContents]);
+    
+    
 
     useEffect(() => {
         setContent(fileContents[currentFile] || "");

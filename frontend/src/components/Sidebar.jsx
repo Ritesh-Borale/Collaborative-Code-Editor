@@ -14,7 +14,11 @@ const Sidebar = () => {
         <div className='side-bar relative h-full flex flex-col w-14 bg-slate-950'>
             <div
                 onClick={() => {
-                    navigate(`/editor/${params.roomId}`);
+                    navigate(`/editor/${params.roomId}`, {
+                        state: {
+                            username: location.state?.username,
+                        }
+                    });
                 }}
                 className="cursor-pointer h-10 w-10 flex items-center justify-center bg-slate-900 rounded-md mt-5 ml-1">
                 <i className="ri-keyboard-line text-2xl"></i>
