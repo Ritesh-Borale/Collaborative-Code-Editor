@@ -122,7 +122,7 @@ const Welcome = () => {
             Get Started
           </motion.button>
           <motion.a
-            href="https://github.com"
+            href="https://github.com/Ritesh-Borale/Collaborative-Code-Editor"
             target="_blank"
             rel="noopener noreferrer"
             whileHover={{ scale: 1.05 }}
