@@ -4,8 +4,9 @@ import toast from 'react-hot-toast';
 import { useLocation, useParams } from "react-router-dom";
 import { initializeSocket, receiveMessage, sendMessage } from "../config/socket";
 import "highlight.js/styles/nord.css";
-import Markdown from 'markdown-to-jsx'
+import Markdown from 'markdown-to-jsx';
 import hljs from 'highlight.js';
+import { Send } from "lucide-react";
 
 function SyntaxHighlightedCode(props) {
     const ref = useRef(null);
@@ -21,7 +22,6 @@ function SyntaxHighlightedCode(props) {
 }
 
 const Chatapp = () => {
-
     const messageBox = React.createRef();
     const location = useLocation();
     const params = useParams();
@@ -33,17 +33,14 @@ const Chatapp = () => {
 
     useEffect(() => {
         const socket = initializeSocket(params.roomId);
-
         const data = {
             roomId: params.roomId,
             username: location.state?.username,
         };
-
         sendMessage('join', data);
-        receiveMessage('joined',({roomId,username})=>{
+        receiveMessage('joined', ({roomId, username}) => {
             toast.success(`${username} joined the room.`);
-        })
-
+        });
         return () => {
             if (socket) {
                 socket.disconnect();
@@ -51,34 +48,27 @@ const Chatapp = () => {
         };
     }, [params.roomId]);
 
-
     useEffect(() => {
         receiveMessage('chat-message', (data) => {
             if (data.username === 'ai') {
                 const message = JSON.parse(data.message);
-                const reqSender = data.by; 
-                console.log(data);
-
+                const reqSender = data.by;
                 if (message.fileTree) {
                     setFileTree((prevTree) => {
                         const updatedTree = { ...prevTree };
-
                         Object.keys(message.fileTree).forEach((fileName) => {
                             updatedTree[fileName] = {
                                 ...message.fileTree[fileName],
                                 reqSender,
                             };
                         });
-
                         return updatedTree;
                     });
                 }
             }
-
             setMessages((prev) => [...prev, data]);
         });
     }, []);
-
 
     useEffect(() => {
         messageBox.current?.scrollTo(0, messageBox.current.scrollHeight);
@@ -97,12 +87,9 @@ const Chatapp = () => {
     };
 
     function WriteAiMessage(message) {
-
-        const messageObject = JSON.parse(message)
+        const messageObject = JSON.parse(message);
         return (
-            <div
-                className='overflow-auto bg-slate-950 text-white rounded-sm p-2'
-            >
+            <div className="overflow-auto bg-slate-900 text-white rounded-lg p-4 shadow-lg">
                 <Markdown
                     children={messageObject.text}
                     options={{
@@ -111,140 +98,151 @@ const Chatapp = () => {
                         },
                     }}
                 />
-            </div>)
+            </div>
+        );
     }
 
-
-
     return (
-        <div className="h-screen flex text-white">
+        <div className="h-screen flex bg-slate-900">
             <Sidebar />
-            <div className="chat-screen h-full flex flex-col w-1/4 bg-slate-700">
-                <div className="h-10 w-full bg-slate-500 p-2 ">
-                    <p className="text-xl font-bold text-black"> Chat Application </p>
+            <div className="w-1/4 flex flex-col bg-slate-800 border-r border-slate-700">
+                <div className="h-16 flex items-center px-6 bg-slate-900 border-b border-slate-700">
+                    <h1 className="text-xl font-semibold text-white">Chat Application</h1>
                 </div>
-                <div className="conversation-area pb-10 flex-grow flex flex-col h-full relative">
+                
+                <div className="flex-grow flex flex-col relative">
                     <div
                         ref={messageBox}
-                        className="message-box p-1 flex-grow flex flex-col overflow-auto max-h-full scrollbar-hide">
+                        className="flex-grow overflow-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-800"
+                    >
                         {messages.map((msg, index) => (
                             <div
                                 key={index}
-                                className={`max-w-52 message flex flex-col p-2 mb-2 ${msg.username === location.state.username ? 'bg-green-600 ml-auto' : 'bg-black'} w-fit rounded-md border-2 ${msg.username === location.state.username ? 'border-green-500' : 'border-white'}`}>
-                                <small className="opacity-65 text-xs">
-                                    {msg.username}
-                                </small>
-                                <div className="text-sm">
-                                    {
-                                        msg.username === 'ai' ? WriteAiMessage(msg.message) : <p>{msg.message}</p>
-                                    }
-
+                                className={`max-w-[80%] ${
+                                    msg.username === location.state.username ? 'ml-auto' : 'mr-auto'
+                                }`}
+                            >
+                                <div className={`rounded-lg p-3 shadow-md ${
+                                    msg.username === location.state.username
+                                        ? 'bg-blue-600'
+                                        : 'bg-slate-700'
+                                }`}>
+                                    <div className="text-xs text-slate-300 mb-1">
+                                        {msg.username}
+                                    </div>
+                                    <div className="text-sm text-white">
+                                        {msg.username === 'ai' 
+                                            ? WriteAiMessage(msg.message) 
+                                            : <p>{msg.message}</p>
+                                        }
+                                    </div>
                                 </div>
                             </div>
                         ))}
                     </div>
-
-                </div>
-                <div className="inputField w-1/4 flex absolute bottom-0 bg">
-                    <input
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        className='p-2 px-4 border-none outline-none flex-grow bg-black'
-                        type="text"
-                        placeholder='Enter message'
-                    />
-
-                    <button
-                        onClick={send}
-                        className='px-5 bg-slate-950 text-white'><i className="ri-send-plane-fill"></i>
-                    </button>
+                    
+                    <div className="p-4 border-t border-slate-700">
+                        <div className="flex items-center gap-2">
+                            <input
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                className="w-full px-4 py-2 bg-slate-700 text-white rounded-lg border border-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                                type="text"
+                                placeholder="Type your message..."
+                                onKeyPress={(e) => e.key === 'Enter' && send()}
+                            />
+                            <button
+                                onClick={send}
+                                className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                                <Send size={20} />
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div className="right bg-slate-850 flex flex-grow h-full">
-                <div className="explorer h-full max-w-64 min-w-52 bg-slate-600">
-                    <div className="file-tree w-full">
-                        {
-                            Object.keys(fileTree).map((file, index) => (
+
+            <div className="flex-grow flex">
+                <div className="w-64 bg-slate-800 border-r border-slate-700">
+                    <div className="p-4">
+                        <h2 className="text-lg font-semibold text-white mb-4">Files</h2>
+                        <div className="space-y-2">
+                            {Object.keys(fileTree).map((file, index) => (
                                 <button
+                                    key={index}
                                     onClick={() => {
-                                        setCurrentFile(file)
-                                        setOpenFiles([...new Set([...openFiles, file])])
+                                        setCurrentFile(file);
+                                        setOpenFiles([...new Set([...openFiles, file])]);
                                     }}
-                                    className="tree-element cursor-pointer p-2 flex item-center gap-2 bg-slate-500 w-full"
+                                    className="w-full p-3 text-left bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
                                 >
-                                    <p className="font-semibold text-lg">{file}</p>
-                                    
+                                    <p className="text-sm font-medium text-white">{file}</p>
                                     {fileTree[file]?.reqSender && (
-                                        <p className="text-sm opacity-50 mt-1">{`By: ${fileTree[file].reqSender}`}</p>
+                                        <p className="text-xs text-slate-400 mt-1">
+                                            By: {fileTree[file].reqSender}
+                                        </p>
                                     )}
                                 </button>
-                            ))
-
-                        }
+                            ))}
+                        </div>
                     </div>
                 </div>
-                {currentFile &&
-                    <div className="code-editor flex flex-col flex-col h-full w-full">
-                        <div className="top flex ">
 
-                            <div className="files flex">
-                                {
-                                    openFiles.map((file, index) => (
-                                        <button
-                                            key={index}
-                                            onClick={() => setCurrentFile(file)}
-                                            className={`open-file cursor-pointer p-2 px-4 flex items-center w-fit gap-2 bg-slate-300 ${currentFile === file ? 'bg-slate-400' : ''}`}
-                                        >
-                                            <p className="font-semibold text-lg">{file}</p>
-                                        </button>
-
-                                    ))
-                                }
+                {currentFile && (
+                    <div className="flex-grow flex flex-col">
+                        <div className="flex items-center border-b border-slate-700 bg-slate-800">
+                            <div className="flex">
+                                {openFiles.map((file, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => setCurrentFile(file)}
+                                        className={`px-4 py-2 text-sm font-medium border-r border-slate-700 transition-colors ${
+                                            currentFile === file
+                                                ? 'bg-slate-700 text-white'
+                                                : 'text-slate-400 hover:bg-slate-700 hover:text-white'
+                                        }`}
+                                    >
+                                        {file}
+                                    </button>
+                                ))}
                             </div>
-
                         </div>
-                        <div className="bottom flex flex-grow max-w-full shrink overflow-auto">
-                            {
-                                fileTree[currentFile] && (
-                                    <div className="code-editor-area h-full overflow-auto flex-grow bg-slate-50">
-                                        <pre
-                                            className="hljs h-full">
-                                            <code
-                                                className="hljs h-full outline-none"
-                                                contentEditable
-                                                suppressContentEditableWarning
-                                                onBlur={(e) => {
-                                                    const updatedContent = e.target.innerText;
-                                                    const ft = {
-                                                        ...fileTree,
-                                                        [currentFile]: {
 
-                                                            content: updatedContent
-
-                                                        }
-                                                    };
-                                                }}
-                                                dangerouslySetInnerHTML={{
-                                                    __html: hljs.highlight('javascript', fileTree[currentFile].content).value
-                                                }}
-                                                style={{
-                                                    whiteSpace: 'pre-wrap',
-                                                    paddingBottom: '25rem',
-                                                    counterSet: 'line-numbering',
-                                                }}
-                                            />
-                                        </pre>
-                                    </div>
-                                )
-                            }
-
+                        <div className="flex-grow overflow-auto">
+                            {fileTree[currentFile] && (
+                                <div className="h-full">
+                                    <pre className="h-full m-0">
+                                        <code
+                                            className="hljs h-full outline-none p-4"
+                                            contentEditable
+                                            suppressContentEditableWarning
+                                            onBlur={(e) => {
+                                                const updatedContent = e.target.innerText;
+                                                setFileTree({
+                                                    ...fileTree,
+                                                    [currentFile]: {
+                                                        content: updatedContent
+                                                    }
+                                                });
+                                            }}
+                                            dangerouslySetInnerHTML={{
+                                                __html: hljs.highlight('javascript', fileTree[currentFile].content).value
+                                            }}
+                                            style={{
+                                                whiteSpace: 'pre-wrap',
+                                                paddingBottom: '25rem',
+                                                counterSet: 'line-numbering',
+                                            }}
+                                        />
+                                    </pre>
+                                </div>
+                            )}
                         </div>
                     </div>
-                }
+                )}
             </div>
         </div>
-    )
+    );
+};
 
-}
-
-export default Chatapp
+export default Chatapp;
