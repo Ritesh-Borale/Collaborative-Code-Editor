@@ -6,38 +6,31 @@ import Editor from '../components/Editor';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { initializeSocket, receiveMessage, sendMessage } from '../config/socket';
+import { SocketContext } from '../context/socket.context';
 
 const EditorPage = () => {
-    const socketRef = useRef(null);
+    const socketRef = useContext(SocketContext);
     const codeRef = useRef(null);
     const { allFiles, setAllFiles, fileContents, setFileContents } = useContext(UserContext);
     const params = useParams();
     const navigate = useNavigate();
     const location = useLocation();
 
-    useEffect(() => {
-        socketRef.current = initializeSocket(params.roomId);
-        console.log(params.roomId)
-        console.log(location.state?.username)
-        
-        const data = {
-            roomId: params.roomId,
-            username: location.state?.username,
-        };
-        
-        
-        sendMessage('join', data);
-        receiveMessage('joined',({roomId,username})=>{
-            
-            toast.success(`${username} joined the room.`);
-        })
+    console.log(socketRef);
 
-        return () => {
-            socketRef.current.disconnect();
-            socketRef.current.off('joined');
-            socketRef.current.off('user-disconnected');
-        };
-    }, [params.roomId,location.state?.username]);
+    useEffect(() => {
+        if (socketRef.current) {
+            const data = {
+                roomId: params.roomId,
+                username: location.state?.username,
+            };
+            
+            sendMessage('join', data);
+            receiveMessage('joined', ({roomId, username}) => {
+                toast.success(`${username} joined the room.`);
+            });
+        }
+    }, [params.roomId, location.state?.username, socketRef.current]);
 
     const handleCreateFile = () => {
         let fileName = prompt("Enter File Name: ");

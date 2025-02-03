@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import toast from 'react-hot-toast';
 import { useLocation, useParams } from "react-router-dom";
@@ -6,7 +6,9 @@ import { initializeSocket, receiveMessage, sendMessage } from "../config/socket"
 import "highlight.js/styles/nord.css";
 import Markdown from 'markdown-to-jsx';
 import hljs from 'highlight.js';
+import { SocketContext } from "../context/socket.context";
 import { Send } from "lucide-react";
+
 
 function SyntaxHighlightedCode(props) {
     const ref = useRef(null);
@@ -30,23 +32,22 @@ const Chatapp = () => {
     const [currentFile, setCurrentFile] = useState(null);
     const [openFiles, setOpenFiles] = useState([]);
     const [fileTree, setFileTree] = useState({});
+    const socketRef = useContext(SocketContext);
 
     useEffect(() => {
-        const socket = initializeSocket(params.roomId);
-        const data = {
-            roomId: params.roomId,
-            username: location.state?.username,
-        };
-        sendMessage('join', data);
-        receiveMessage('joined', ({roomId, username}) => {
-            toast.success(`${username} joined the room.`);
-        });
-        return () => {
-            if (socket) {
-                socket.disconnect();
-            }
-        };
-    }, [params.roomId]);
+
+        if (socketRef.current) {
+            const data = {
+                roomId: params.roomId,
+                username: location.state?.username,
+            };
+
+            sendMessage('join', data);
+//             receiveMessage('joined', ({roomId, username}) => {
+//                 toast.success(`${username} joined the Chat room.`);
+//             });
+        }
+    }, [params.roomId, socketRef.current]);
 
     useEffect(() => {
         receiveMessage('chat-message', (data) => {
