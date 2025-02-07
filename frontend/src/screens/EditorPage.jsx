@@ -10,6 +10,7 @@ import { SocketContext } from '../context/socket.context';
 
 const EditorPage = () => {
     const socketRef = useContext(SocketContext);
+    const [connectedUsers, setConnectedUsers] = useState(0);
     const codeRef = useRef(null);
     const { allFiles, setAllFiles, fileContents, setFileContents } = useContext(UserContext);
     const params = useParams();
@@ -24,8 +25,14 @@ const EditorPage = () => {
             };
             
             sendMessage('join', data);
-            receiveMessage('joined', ({roomId, username}) => {
+            receiveMessage('joined', ({roomId, username, clients}) => {
                 toast.success(`${username} joined the room.`);
+                setConnectedUsers(clients.length);
+            });
+
+            receiveMessage('user-disconnected', ({username, clients}) => {
+                toast.success(`${username} left the room.`);
+                setConnectedUsers(clients.length);
             });
         }
     }, [params.roomId, location.state?.username, socketRef.current]);
@@ -59,7 +66,12 @@ const EditorPage = () => {
             {/* File Sidebar */}
             <div className="file-and-chat h-full flex flex-col w-1/4 bg-[#1A1B26] border-r border-[#2D2D2D] shadow-lg">
                 <div className="h-14 flex justify-between items-center w-full bg-[#1A1B26] p-3 border-b border-[#2D2D2D]">
-                    <p className="text-lg font-medium text-gray-300">All Files</p>
+                    <div className="flex items-center gap-2">
+                        <p className="text-lg font-medium text-gray-300">All Files</p>
+                        <span className="px-2 py-1 bg-[#2D2D2D] rounded-full text-xs text-gray-400">
+                            {connectedUsers} online
+                        </span>
+                    </div>
                     <button
                         className="px-3 py-1.5 bg-[#00875A] hover:bg-[#006D48] rounded-md text-sm 
                         transition-colors duration-300 flex items-center gap-1"

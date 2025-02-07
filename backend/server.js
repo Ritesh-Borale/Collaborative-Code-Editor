@@ -15,6 +15,8 @@ const io = new Server(server, {
 });
 
 const userSocketMap = {};
+const roomUserMap = {};
+
 function getAllConnectedClients(roomId) {
     // Map
     return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map(
@@ -37,13 +39,20 @@ io.on('connection', socket => {
         }
         userSocketMap[socket.id] = username;
         socket.join(roomId);
+
+        // Initialize room user count if not exists
+        if (!roomUserMap[roomId]) {
+            roomUserMap[roomId] = new Set();
+        }
+        roomUserMap[roomId].add(socket.id);
+
         const clients = getAllConnectedClients(roomId);
-        console.log(clients);
         clients.forEach(({ socketId }) => {
             io.to(socketId).emit('joined', {
                 clients,
                 username,
                 socketId: socket.id,
+                connectedUsers: roomUserMap[roomId].size
             });
         });
     });
@@ -88,9 +97,19 @@ io.on('connection', socket => {
     socket.on('disconnect', () => {
         const rooms = [...socket.rooms];
         rooms.forEach((roomId) => {
+            // Remove user from room count
+            if (roomUserMap[roomId]) {
+                roomUserMap[roomId].delete(socket.id);
+                // Clean up empty rooms
+                if (roomUserMap[roomId].size === 0) {
+                    delete roomUserMap[roomId];
+                }
+            }
+
             io.in(roomId).emit('user-disconnected', {
                 socketId: socket.id,
                 username: userSocketMap[socket.id],
+                connectedUsers: roomUserMap[roomId] ? roomUserMap[roomId].size : 0
             });
         });
         delete userSocketMap[socket.id];
