@@ -16,8 +16,6 @@ const EditorPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    console.log(socketRef);
-
     useEffect(() => {
         if (socketRef.current) {
             const data = {
@@ -54,43 +52,50 @@ const EditorPage = () => {
     };
 
     return (
-        <div className='h-screen flex text-white'>
+        <div className='h-screen flex bg-[#1E1E1E] text-white'>
             {/* Sidebar */}
             <Sidebar/>
-
+            
             {/* File Sidebar */}
-            <div className="file-and-chat h-full flex flex-col w-1/4 bg-slate-700">
-                <div className="h-14 flex justify-between w-full bg-slate-800 p-2">
-                    <p className="text-2xl">All Files</p>
+            <div className="file-and-chat h-full flex flex-col w-1/4 bg-[#1A1B26] border-r border-[#2D2D2D] shadow-lg">
+                <div className="h-14 flex justify-between items-center w-full bg-[#1A1B26] p-3 border-b border-[#2D2D2D]">
+                    <p className="text-lg font-medium text-gray-300">All Files</p>
                     <button
-                        className="p-2 bg-green-500 rounded-md mr-2 text-lg"
-                        onClick={handleCreateFile} // Corrected function name
+                        className="px-3 py-1.5 bg-[#00875A] hover:bg-[#006D48] rounded-md text-sm 
+                        transition-colors duration-300 flex items-center gap-1"
+                        onClick={handleCreateFile}
                     >
-                        Create File +
+                        <i className="ri-add-line"></i>
+                        <span>Create File</span>
                     </button>
                 </div>
-                <div className="h-full w-full bg-slate-900 px-2">
-                    {Array.from(allFiles).map((fileName) => (  // Convert Set to Array for iteration
+                <div className="h-full w-full bg-[#1A1B26] px-2 py-2 overflow-y-auto scrollbar-thin scrollbar-thumb-[#424242]">
+                    {Array.from(allFiles).map((fileName) => (
                         <div
                             key={fileName}
-                            className="h-10 flex items-center w-full bg-slate-700 mt-2 rounded-md pl-2 cursor-pointer hover:bg-slate-600"
+                            className="h-9 flex items-center w-full bg-[#1A1B26] rounded-sm pl-3 
+                            cursor-pointer hover:bg-[#2D2D2D] transition-colors duration-200 
+                            group flex justify-between items-center"
                         >
-                            <i className="ri-file-line text-xl mr-2"></i>
-                            <p className="text-xl">{fileName}</p>
+                            <div className="flex items-center">
+                                <i className="ri-file-line text-lg mr-2 text-[#539bf5]"></i>
+                                <p className="text-sm text-gray-300 truncate">{fileName}</p>
+                            </div>
+                            <i className="ri-more-2-line text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity mr-2"></i>
                         </div>
                     ))}
                 </div>
             </div>
 
-            <div className="editor-setup flex h-full bg-slate-700 flex-grow">
+            <div className="editor-setup flex h-full bg-[#1E1E1E] flex-grow">
                 <div className='Editor h-full w-full'>
                     <Editor
-                    socketRef={socketRef}
-                    roomId={params.roomId}
-                    onCodeChange={(code)=>{
-                        codeRef.current=code;
-                    }}
-                    username={location.state?.username}
+                        socketRef={socketRef}
+                        roomId={params.roomId}
+                        onCodeChange={(code)=>{
+                            codeRef.current=code;
+                        }}
+                        username={location.state?.username}
                     />
                 </div>
             </div>
@@ -99,4 +104,3 @@ const EditorPage = () => {
 };
 
 export default EditorPage;
-

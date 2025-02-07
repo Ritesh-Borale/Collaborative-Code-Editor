@@ -164,41 +164,35 @@ const Editor = ({socketRef, roomId, onCodeChange,username}) => {
     }
 
     return (
-        <div className="h-full w-full flex flex-col">
-            <div className="files flex items-center justify-between p-2 bg-slate-800">
-                <select
-                    className="bg-slate-700 text-white p-2 rounded-md"
-                    value={currentFile}
-                    onChange={(e) => {
-                        const selectedFile = e.target.value;
-                        setCurrentFile(selectedFile);
-                        setContent(fileContents[selectedFile]);
-                    }}
-                >
-                    {Array.from(allFiles).map((fileName) => (
-                        <option key={fileName} value={fileName}>
-                            {fileName}
-                        </option>
-                    ))}
-                </select>
-                <button
-                    className="Run-Code ml-auto mr-5 h-10 w-28 bg-green-500 rounded-md"
-                    onClick={handleRunCode}
-                >
-                    Run Code
-                </button>
-                <button
-                    className="delete-file h-10 w-28 bg-red-500 rounded-md"
-                    onClick={deleteFile}
-                >
-                    Delete File
-                </button>
-            </div>
+        <div className="h-full w-full flex bg-gradient-to-b from-gray-900 to-gray-800">
+            {/* Main Editor Section - Left Side - 70% */}
+            <div className="w-[70%] flex flex-col">
+                <div className="files flex items-center justify-between p-4 bg-gray-800/50 backdrop-blur-sm border-b border-gray-700/50">
+                    <select
+                        className="bg-gray-800 text-gray-200 p-2 rounded-md border border-gray-600 hover:border-blue-400 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-lg"
+                        value={currentFile}
+                        onChange={(e) => {
+                            const selectedFile = e.target.value;
+                            setCurrentFile(selectedFile);
+                            setContent(fileContents[selectedFile]);
+                            sendMessage('file-change', {
+                                roomId,
+                                selectedFile,
+                                username
+                            });
+                        }}
+                    >
+                        {Array.from(allFiles).map((fileName) => (
+                            <option key={fileName} value={fileName}>
+                                {fileName}
+                            </option>
+                        ))}
+                    </select>
+                </div>
 
-            <div className="editor-terminal flex" style={{ flexBasis: "60%", minHeight: "70%" }}>
-                <div className="flex-grow-[5]">
+                <div className="flex-grow">
                     <MonacoEditor
-                        height="90%"
+                        height="100%"
                         width="100%"
                         language={getLanguage(currentFile)}
                         value={content}
@@ -206,35 +200,74 @@ const Editor = ({socketRef, roomId, onCodeChange,username}) => {
                         theme="vs-dark"
                         options={{
                             fontSize: 15,
+                            padding: { top: 16 },
+                            roundedSelection: true,
+                            scrollBeyondLastLine: false,
+                            minimap: { enabled: false },
+                            automaticLayout: true,
+                            wordWrap: 'on',
                         }}
-                    />
-                </div>
-
-                <div className="flex-grow-[4] p-2 bg-slate-800 rounded-md h-full">
-                    <p className="text-2xl font-bold mb-5 text-white">Input:</p>
-                    <textarea
-                        className="p-2 h-full w-full bg-slate-700 h-4/5 rounded-lg text-white"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
                     />
                 </div>
             </div>
 
-            <div
-                className="terminal absolute bottom-0 bg-black p-4 "
-                style={{ height: '30%', maxHeight: '400px',width:'71%' }}
-            >
-                <div className="flex justify-between items-center">
-                    <p className="text-white text-xl">Terminal Output:</p>
-                    <button 
-                    onClick={clearTerminal}
-                    className="bg-yellow-500 px-2 text-black rounded-md">Clear terminal</button>
+            {/* Right Side Panel - 30% */}
+            <div className="w-[30%] border-l border-gray-700/50 flex flex-col">
+                {/* Top Controls - Default style buttons */}
+                <div className="p-4 bg-gray-800/50 backdrop-blur-sm border-b border-gray-700/50 flex gap-2">
+                    <button
+                        className="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-lg hover:shadow-emerald-500/20 font-medium"
+                        onClick={handleRunCode}
+                    >
+                        Run
+                    </button>
+                    <button
+                        className="flex-1 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-rose-500 shadow-lg hover:shadow-rose-500/20 font-medium"
+                        onClick={deleteFile}
+                    >
+                        Delete
+                    </button>
                 </div>
-                <pre className="text-white overflow-auto">{output}</pre>
+
+                {/* Input Section */}
+                <div className="flex-1 p-4 bg-gray-800/30">
+                    <p className="text-lg font-semibold mb-2 text-gray-200">Input:</p>
+                    <textarea
+                        className="w-full h-[calc(100%-2rem)] bg-gray-700/50 rounded-lg text-gray-200 resize-none border border-gray-600 focus:outline-none focus:border-blue-400 transition-all duration-300 placeholder-gray-400 p-3 font-mono"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Enter your input here..."
+                        spellCheck="false"
+                    />
+                </div>
+
+                {/* Terminal Section */}
+                <div className="flex-1 border-t border-gray-700/50 flex flex-col max-h-[50%]">
+                    <div className="flex justify-between items-center p-3 bg-gray-800/50">
+                        <div className="flex items-center gap-2">
+                            <p className="text-gray-200 font-semibold">Terminal Output</p>
+                            {output && (
+                                <span className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded-full">
+                                    {getLanguage(currentFile)}
+                                </span>
+                            )}
+                        </div>
+                        <button 
+                            onClick={clearTerminal}
+                            className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-gray-900 rounded-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm font-medium"
+                        >
+                            Clear
+                        </button>
+                    </div>
+                    <div className="flex-1 bg-gray-800/30 relative">
+                        <pre className="absolute inset-0 p-3 overflow-auto text-gray-200 font-mono text-sm whitespace-pre-wrap break-words">
+                            {output || 'No output yet. Run your code to see results here.'}
+                        </pre>
+                    </div>
+                </div>
             </div>
         </div>
     );
 };
 
 export default Editor;
-
