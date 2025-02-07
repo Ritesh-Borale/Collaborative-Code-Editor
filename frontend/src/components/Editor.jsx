@@ -202,10 +202,8 @@ const Editor = ({socketRef, roomId, onCodeChange,username}) => {
                             fontSize: 15,
                             padding: { top: 16 },
                             roundedSelection: true,
-                            scrollBeyondLastLine: false,
                             minimap: { enabled: false },
                             automaticLayout: true,
-                            wordWrap: 'on',
                         }}
                     />
                 </div>
