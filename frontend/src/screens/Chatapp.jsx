@@ -33,9 +33,9 @@ const Chatapp = () => {
     const [openFiles, setOpenFiles] = useState([]);
     const [fileTree, setFileTree] = useState({});
     const socketRef = useContext(SocketContext);
+    const [connectedUsers, setConnectedUsers] = useState(0);
 
     useEffect(() => {
-
         if (socketRef.current) {
             const data = {
                 roomId: params.roomId,
@@ -43,9 +43,16 @@ const Chatapp = () => {
             };
 
             sendMessage('join', data);
-//             receiveMessage('joined', ({roomId, username}) => {
-//                 toast.success(`${username} joined the Chat room.`);
-//             });
+            
+            receiveMessage('joined', ({roomId, username, clients}) => {
+                toast.success(`${username} joined the Chat room.`);
+                setConnectedUsers(clients.length);
+            });
+
+            receiveMessage('user-disconnected', ({username, clients}) => {
+                toast.success(`${username} left the room.`);
+                setConnectedUsers(clients.length);
+            });
         }
     }, [params.roomId, socketRef.current]);
 
@@ -107,8 +114,11 @@ const Chatapp = () => {
         <div className="h-screen flex bg-slate-900">
             <Sidebar />
             <div className="w-1/4 flex flex-col bg-slate-800 border-r border-slate-700">
-                <div className="h-16 flex items-center px-6 bg-slate-900 border-b border-slate-700">
+                <div className="h-16 flex items-center justify-between px-6 bg-slate-900 border-b border-slate-700">
                     <h1 className="text-xl font-semibold text-white">Chat Application</h1>
+                    <span className="px-3 py-1 bg-slate-700 rounded-full text-sm text-gray-300">
+                        {connectedUsers} online
+                    </span>
                 </div>
                 
                 <div className="flex-grow flex flex-col relative">
