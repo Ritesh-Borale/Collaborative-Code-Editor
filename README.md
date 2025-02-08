@@ -1,10 +1,3 @@
-# CodeSync: Collaborative Code Editor
-
-<div align="center">
-  <h3>Code Together, Build Together</h3>
-  <p>A real-time collaborative code editor that brings teams closer through seamless coding experiences.</p>
-</div>
-
 ![image](https://github.com/user-attachments/assets/a51db3eb-9cad-4c73-9001-01702829be7d)
 
 ## 🚀 Overview
