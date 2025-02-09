@@ -36,7 +36,11 @@ const Sidebar = () => {
             </div>
             <div
                 onClick={() => {
-                    navigate(`/whiteboard/${params.roomId}`);
+                    navigate(`/whiteboard/${params.roomId}`, {
+                        state: {
+                            username: location.state?.username,
+                        }
+                    });
                 }}
                 className="cursor-pointer h-10 w-10 flex items-center justify-center bg-slate-900 rounded-md mt-6 ml-1">
                 <i className="ri-artboard-line text-2xl"></i>

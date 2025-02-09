@@ -29,7 +29,7 @@ function AppRoutes() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/editor/:roomId" element={<WithSocketProvider Component={EditorPage} />} />
                 <Route path="/chat/:roomId" element={<WithSocketProvider Component={Chatapp} />} />
-                <Route path="/whiteboard/:roomId" element={<Whiteboard />} />
+                <Route path="/whiteboard/:roomId" element={<WithSocketProvider Component={Whiteboard} />} />
             </Routes>
         </BrowserRouter>
     )
