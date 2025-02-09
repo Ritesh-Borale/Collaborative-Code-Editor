@@ -40,7 +40,6 @@ io.on('connection', socket => {
         userSocketMap[socket.id] = username;
         socket.join(roomId);
 
-        // Initialize room user count if not exists
         if (!roomUserMap[roomId]) {
             roomUserMap[roomId] = new Set();
         }
