@@ -54,6 +54,24 @@ const Editor = ({socketRef, roomId, onCodeChange,username}) => {
             allFiles
         });
         
+        // Emit typing event
+        sendMessage('typing', {
+            roomId,
+            username,
+            isTyping: true
+        });
+
+        // Clear typing indicator after 1 second of no typing
+        if (window.typingTimeout) {
+            clearTimeout(window.typingTimeout);
+        }
+        window.typingTimeout = setTimeout(() => {
+            sendMessage('typing', {
+                roomId,
+                username,
+                isTyping: false
+            });
+        }, 1000);
     };
 
     useEffect(() => {

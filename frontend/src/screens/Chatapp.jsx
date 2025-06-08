@@ -7,7 +7,7 @@ import "highlight.js/styles/nord.css";
 import Markdown from 'markdown-to-jsx';
 import hljs from 'highlight.js';
 import { SocketContext } from "../context/socket.context";
-import { Send } from "lucide-react";
+import { Send, Bot, X } from "lucide-react";
 
 
 function SyntaxHighlightedCode(props) {
@@ -34,23 +34,26 @@ const Chatapp = () => {
     const [fileTree, setFileTree] = useState({});
     const socketRef = useContext(SocketContext);
     const [connectedUsers, setConnectedUsers] = useState(0);
+    const [showAiPrompt, setShowAiPrompt] = useState(false);
+    const [aiPrompt, setAiPrompt] = useState('');
 
     useEffect(() => {
         if (socketRef.current) {
             const data = {
                 roomId: params.roomId,
                 username: location.state?.username,
+                currentPage: 'chat'
             };
 
             sendMessage('join', data);
             
+            // toast.success(`${username} joined the Chat room.`);
             receiveMessage('joined', ({roomId, username, clients}) => {
-                toast.success(`${username} joined the Chat room.`);
                 setConnectedUsers(clients.length);
             });
 
             receiveMessage('user-disconnected', ({username, clients}) => {
-                toast.success(`${username} left the room.`);
+                // toast.success(`${username} left the room.`);
                 setConnectedUsers(clients.length);
             });
         }
@@ -59,22 +62,30 @@ const Chatapp = () => {
     useEffect(() => {
         receiveMessage('chat-message', (data) => {
             if (data.username === 'ai') {
-                const message = JSON.parse(data.message);
-                const reqSender = data.by;
-                if (message.fileTree) {
-                    setFileTree((prevTree) => {
-                        const updatedTree = { ...prevTree };
-                        Object.keys(message.fileTree).forEach((fileName) => {
-                            updatedTree[fileName] = {
-                                ...message.fileTree[fileName],
-                                reqSender,
-                            };
+                try {
+                    const message = JSON.parse(data.message);
+                    const reqSender = data.by;
+                    if (message.fileTree) {
+                        setFileTree((prevTree) => {
+                            const updatedTree = { ...prevTree };
+                            Object.keys(message.fileTree).forEach((fileName) => {
+                                updatedTree[fileName] = {
+                                    ...message.fileTree[fileName],
+                                    reqSender,
+                                };
+                            });
+                            return updatedTree;
                         });
-                        return updatedTree;
-                    });
+                    }
+                    setMessages((prev) => [...prev, { username: data.username, message: message }]);
+                } catch (e) {
+                    console.error("Failed to parse AI message as JSON:", data.message, e);
+                    // Fallback: display raw message if JSON parsing fails
+                    setMessages((prev) => [...prev, { username: data.username, message: data.message }]);
                 }
+            } else {
+                setMessages((prev) => [...prev, data]);
             }
-            setMessages((prev) => [...prev, data]);
         });
     }, []);
 
@@ -89,13 +100,26 @@ const Chatapp = () => {
                 username: location.state?.username,
                 message,
             });
-            setMessages((prev) => [...prev, { username: location.state?.username, message }]);
             setMessage('');
         }
     };
 
+    const handleAiPrompt = () => {
+        if (aiPrompt.trim()) {
+            const fullPrompt = `@ai ${aiPrompt}`;
+            sendMessage('chat-message', {
+                roomId: params.roomId,
+                username: location.state?.username,
+                message: fullPrompt,
+            });
+            setAiPrompt('');
+            setShowAiPrompt(false);
+        }
+    };
+
     function WriteAiMessage(message) {
-        const messageObject = JSON.parse(message);
+        // Check if message is already an object (parsed JSON) or needs to be parsed
+        const messageObject = typeof message === 'string' ? JSON.parse(message) : message;
         return (
             <div className="overflow-auto bg-slate-900 text-white rounded-lg p-4 shadow-lg">
                 <Markdown
@@ -170,6 +194,44 @@ const Chatapp = () => {
                             </button>
                         </div>
                     </div>
+                </div>
+
+                {/* AI Bot Button and Prompt */}
+                <div className="absolute bottom-4 right-4 z-10">
+                    {showAiPrompt ? (
+                        <div className="bg-slate-800 rounded-lg shadow-lg p-4 w-80 border border-slate-700">
+                            <div className="flex justify-between items-center mb-3">
+                                <h3 className="text-white font-medium">Ask AI Assistant</h3>
+                                <button 
+                                    onClick={() => setShowAiPrompt(false)}
+                                    className="text-slate-400 hover:text-white"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <textarea
+                                value={aiPrompt}
+                                onChange={(e) => setAiPrompt(e.target.value)}
+                                className="w-full px-3 py-2 bg-slate-700 text-white rounded-lg border border-slate-600 focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                                placeholder="Describe your problem..."
+                                rows={3}
+                            />
+                            <button
+                                onClick={handleAiPrompt}
+                                className="mt-2 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <Bot size={18} />
+                                <span>Ask AI</span>
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={() => setShowAiPrompt(true)}
+                            className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+                        >
+                            <Bot size={24} />
+                        </button>
+                    )}
                 </div>
             </div>
 

@@ -7,49 +7,54 @@ import { Code2, Users, MessageSquare } from 'lucide-react';
 
 const Home = () => {
   const navigate = useNavigate();
+  const [step, setStep] = useState(null); // null, 'create', 'join'
   const [roomId, setRoomId] = useState('');
   const [username, setUsername] = useState('');
+  const [workTitle, setWorkTitle] = useState('');
 
-  const createNewRoom = useCallback((e) => {
+  const handleCreateClick = () => {
+    setStep('create');
+    setRoomId(uuidV4());
+    setUsername('');
+    setWorkTitle('');
+  };
+
+  const handleJoinClick = () => {
+    setStep('join');
+    setRoomId('');
+    setUsername('');
+    setWorkTitle('');
+  };
+
+  const handleCreateRoom = useCallback((e) => {
     e.preventDefault();
-    const id = uuidV4();
-    setRoomId(id);
-    toast.success('New collaboration room created');
-  }, []);
+    if (!roomId || !username || !workTitle) {
+      toast.error('All fields are required');
+      return;
+    }
+    navigate(`/editor/${roomId}`, {
+      state: { username, isAdmin: true, workTitle },
+      replace: true
+    });
+  }, [roomId, username, workTitle, navigate]);
 
-  const joinRoom = useCallback(() => {
+  const handleJoinRoom = useCallback((e) => {
+    e.preventDefault();
     if (!roomId || !username) {
       toast.error('Room ID and username are required');
       return;
     }
-
     navigate(`/editor/${roomId}`, {
-      state: { username },
+      state: { username, isAdmin: false },
       replace: true
     });
   }, [roomId, username, navigate]);
-
-  const handleInputEnter = useCallback((e) => {
-    if (e.code === 'Enter') {
-      joinRoom();
-    }
-  }, [joinRoom]);
-
-  const handleRoomIdChange = useCallback((e) => {
-    setRoomId(e.target.value.trim());
-  }, []);
-
-  const handleUsernameChange = useCallback((e) => {
-    setUsername(e.target.value.trim());
-  }, []);
 
   const storedEmail = localStorage.getItem('email') || 'User';
   const firstName = storedEmail.split('@')[0];
 
   return (
     <div className="flex min-h-screen bg-[#0A0B0F] text-white">
-      
-
       {/* Right Section - Welcome */}
       <div className="w-1/2 flex justify-center items-center p-12 bg-gradient-to-br from-[#2D2F36] to-[#1A1C23]">
         <motion.div 
@@ -103,7 +108,7 @@ const Home = () => {
           </motion.div>
         </motion.div>
       </div>
-      {/* Left Section - Room Creation */}
+      {/* Left Section - Room Creation/Join */}
       <div className="w-1/2 flex justify-center items-center bg-[#1A1C23] p-12">
         <div className="w-96 space-y-4">
           <img
@@ -112,42 +117,102 @@ const Home = () => {
             alt="CodeSync Logo"
           />
           <h4 className="text-white text-center text-xl font-bold mb-6 tracking-wide">
-            Join or Create Collaboration Room
+            {step === null && 'Start Collaboration'}
+            {step === 'create' && 'Create a New Room'}
+            {step === 'join' && 'Join an Existing Room'}
           </h4>
           <div className="space-y-4">
-            <input
-              type="text"
-              className="w-full p-3 text-white bg-[#2D2F36] border border-gray-600 rounded-md outline-none focus:ring-2 focus:ring-[#7C3AED] transition"
-              placeholder="Enter Room ID"
-              onChange={handleRoomIdChange}
-              value={roomId}
-              onKeyUp={handleInputEnter}
-              autoComplete="off"
-            />
-            <input
-              type="text"
-              className="w-full p-3 text-white bg-[#2D2F36] border border-gray-600 rounded-md outline-none focus:ring-2 focus:ring-[#7C3AED] transition"
-              placeholder="Choose Username"
-              onChange={handleUsernameChange}
-              value={username}
-              onKeyUp={handleInputEnter}
-              autoComplete="off"
-            />
-            <button
-              className="w-full p-3 text-white bg-[#7C3AED] rounded-md hover:bg-[#6B21A8] active:scale-95 transition-all duration-200 ease-in-out"
-              onClick={joinRoom}
-            >
-              Join Collaboration Room
-            </button>
-            <p className="text-gray-400 text-sm text-center">
-              No invite?
-              <button
-                onClick={createNewRoom}
-                className="text-[#7C3AED] hover:underline ml-1 focus:outline-none"
-              >
-                Create New Room
-              </button>
-            </p>
+            {step === null && (
+              <div className="flex flex-col gap-4">
+                <button
+                  className="w-full p-3 text-white bg-[#7C3AED] rounded-md hover:bg-[#6B21A8] active:scale-95 transition-all duration-200 ease-in-out"
+                  onClick={handleCreateClick}
+                >
+                  Create Room
+                </button>
+                <button
+                  className="w-full p-3 text-white bg-[#2D2F36] border border-gray-600 rounded-md hover:bg-[#232334] active:scale-95 transition-all duration-200 ease-in-out"
+                  onClick={handleJoinClick}
+                >
+                  Join Room
+                </button>
+              </div>
+            )}
+            {step === 'create' && (
+              <form onSubmit={handleCreateRoom} className="space-y-4">
+                <input
+                  type="text"
+                  className="w-full p-3 text-white bg-[#2D2F36] border border-gray-600 rounded-md outline-none focus:ring-2 focus:ring-[#7C3AED] transition"
+                  placeholder="Room ID"
+                  value={roomId}
+                  onChange={e => setRoomId(e.target.value.trim())}
+                  autoComplete="off"
+                  readOnly
+                />
+                <input
+                  type="text"
+                  className="w-full p-3 text-white bg-[#2D2F36] border border-gray-600 rounded-md outline-none focus:ring-2 focus:ring-[#7C3AED] transition"
+                  placeholder="Work Title (Subject)"
+                  value={workTitle}
+                  onChange={e => setWorkTitle(e.target.value)}
+                  autoComplete="off"
+                />
+                <input
+                  type="text"
+                  className="w-full p-3 text-white bg-[#2D2F36] border border-gray-600 rounded-md outline-none focus:ring-2 focus:ring-[#7C3AED] transition"
+                  placeholder="Admin Name"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  autoComplete="off"
+                />
+                <button
+                  className="w-full p-3 text-white bg-[#7C3AED] rounded-md hover:bg-[#6B21A8] active:scale-95 transition-all duration-200 ease-in-out"
+                  type="submit"
+                >
+                  Create Room
+                </button>
+                <button
+                  type="button"
+                  className="w-full p-2 text-gray-400 hover:text-white text-xs underline"
+                  onClick={() => setStep(null)}
+                >
+                  Back
+                </button>
+              </form>
+            )}
+            {step === 'join' && (
+              <form onSubmit={handleJoinRoom} className="space-y-4">
+                <input
+                  type="text"
+                  className="w-full p-3 text-white bg-[#2D2F36] border border-gray-600 rounded-md outline-none focus:ring-2 focus:ring-[#7C3AED] transition"
+                  placeholder="Enter Room ID"
+                  value={roomId}
+                  onChange={e => setRoomId(e.target.value.trim())}
+                  autoComplete="off"
+                />
+                <input
+                  type="text"
+                  className="w-full p-3 text-white bg-[#2D2F36] border border-gray-600 rounded-md outline-none focus:ring-2 focus:ring-[#7C3AED] transition"
+                  placeholder="Enter Your Name"
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  autoComplete="off"
+                />
+                <button
+                  className="w-full p-3 text-white bg-[#7C3AED] rounded-md hover:bg-[#6B21A8] active:scale-95 transition-all duration-200 ease-in-out"
+                  type="submit"
+                >
+                  Join Room
+                </button>
+                <button
+                  type="button"
+                  className="w-full p-2 text-gray-400 hover:text-white text-xs underline"
+                  onClick={() => setStep(null)}
+                >
+                  Back
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </div>
